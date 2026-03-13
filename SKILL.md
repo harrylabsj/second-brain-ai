@@ -8,7 +8,7 @@ env:
     description: Optional fallback path to the local Markdown vault. Preferred usage is to pass vault_path explicitly in the tool input.
 ---
 
-# Second Brain AI Skill v2.1.6
+# Second Brain AI Skill v2.1.7
 
 A lightweight skill for working with a user-chosen Markdown knowledge base (Obsidian/Logseq style) with controlled write operations, file-based search, and smart link suggestions.
 

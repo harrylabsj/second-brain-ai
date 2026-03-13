@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 /**
- * Initialize a new Second Brain vault
- * Version: 2.0.0
+ * Initialize a new Second Brain vault.
  */
 
 const fs = require('fs');
 const path = require('path');
-const { resolveVaultPath, getPaths, requireWriteApproval } = require('./lib/common');
+const { VAULT_PATH, requireWriteApproval } = require('./lib/common');
 
 const FOLDERS = [
   '00-Inbox', '01-Daily', '02-Ideas', '03-Projects',
@@ -16,28 +15,9 @@ const FOLDERS = [
 const README_CONTENT = `# Second Brain
 
 Personal knowledge management vault.
-
-## Folder Structure
-
-- **00-Inbox** - New uncategorized notes
-- **01-Daily** - Daily notes and journals
-- **02-Ideas** - Ideas and thoughts
-- **03-Projects** - Project notes
-- **04-People** - People notes
-- **05-Concepts** - Concept definitions
-- **06-Reading** - Reading notes
-- **07-MOCs** - Maps of Content
-- **99-Archive** - Archived notes
-
-## Quick Start
-
-1. Capture note: \`node scripts/capture_note.js '{"title":"My Idea","type":"idea"}'\`
-2. Search: \`node scripts/search_notes.js '{"query":"AI"}'\`
-3. Append: \`node scripts/append_note.js '{"title":"My Idea","content":"More thoughts"}'\`
-4. Suggest links: \`node scripts/suggest_links.js '{"title":"My Idea"}'\`
 `;
 
-const GITIGNORE_CONTENT = `# Second Brain Ignore Rules
+const IGNORE_CONTENT = `# Second Brain Ignore Rules
 README.md
 CHANGELOG.md
 LICENSE.md
@@ -48,40 +28,38 @@ node_modules/
 `;
 
 function initVault(input = {}) {
-  const vaultPath = getPaths(input).vault;
   requireWriteApproval(input, 'allow_write');
-  const { vault: vaultPath, indexDir } = getPaths(input);
-  if (fs.existsSync(vaultPath)) {
-    const existingFiles = fs.readdirSync(vaultPath).filter(f => !f.startsWith('.'));
+
+  if (fs.existsSync(VAULT_PATH)) {
+    const existingFiles = fs.readdirSync(VAULT_PATH).filter(f => !f.startsWith('.'));
     if (existingFiles.length > 0) {
-      console.log(JSON.stringify({ status: 'exists', path: vaultPath }, null, 2));
-      return;
+      return { status: 'exists', path: VAULT_PATH, message: 'Vault already exists' };
     }
   }
-  
-  try {
-    fs.mkdirSync(vaultPath, { recursive: true });
-    for (const folder of FOLDERS) {
-      fs.mkdirSync(path.join(vaultPath, folder), { recursive: true });
-    }
-    fs.writeFileSync(path.join(vaultPath, 'README.md'), README_CONTENT);
-    fs.writeFileSync(path.join(vaultPath, '.secondbrainignore'), GITIGNORE_CONTENT);
-    
-    const indexResult = { status: 'skipped' };
-    
-    console.log(JSON.stringify({
-      status: 'success',
-      path: vaultPath,
-      folders: FOLDERS,
-      index: null,
-      message: 'Vault initialized successfully'
-    }, null, 2));
-  } catch (e) {
-    console.log(JSON.stringify({ status: 'error', error: e.message }, null, 2));
-    process.exit(1);
+
+  fs.mkdirSync(VAULT_PATH, { recursive: true });
+  for (const folder of FOLDERS) {
+    fs.mkdirSync(path.join(VAULT_PATH, folder), { recursive: true });
   }
+  fs.writeFileSync(path.join(VAULT_PATH, 'README.md'), README_CONTENT, 'utf-8');
+  fs.writeFileSync(path.join(VAULT_PATH, '.secondbrainignore'), IGNORE_CONTENT, 'utf-8');
+
+  return {
+    status: 'success',
+    path: VAULT_PATH,
+    folders: FOLDERS,
+    message: 'Vault initialized successfully'
+  };
 }
 
 const args = process.argv.slice(2);
 const input = args.length > 0 ? JSON.parse(args[0]) : {};
-initVault(input);
+
+try {
+  const result = initVault(input);
+  console.log(JSON.stringify(result, null, 2));
+  if (result.status === 'error') process.exit(1);
+} catch (e) {
+  console.log(JSON.stringify({ error: e.message }, null, 2));
+  process.exit(1);
+}
