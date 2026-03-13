@@ -6,7 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { VAULT_PATH, sanitizeFilename, buildFrontmatter, indexNote, getDb } = require('./lib/common');
+const { VAULT_PATH, sanitizeFilename, buildFrontmatter, indexNote, getDb, requireWriteApproval } = require('./lib/common');
 
 const TYPE_FOLDERS = {
   idea: '02-Ideas', project: '03-Projects', person: '04-People',
@@ -15,6 +15,7 @@ const TYPE_FOLDERS = {
 };
 
 function captureNote(data) {
+  requireWriteApproval(data, 'allow_write');
   if (!data.title) return { error: 'Title is required' };
   if (!fs.existsSync(VAULT_PATH)) {
     try { fs.mkdirSync(VAULT_PATH, { recursive: true }); }

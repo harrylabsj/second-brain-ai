@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Search notes with SQLite FTS5 ranking (fallback to file scan)
+ * Search notes with file-based scanning
  * Version: 2.0.0
  */
 
@@ -101,17 +101,8 @@ function searchNotes(query, limit = 5, useIndex = true) {
   }
   
   let results = null;
-  let usedIndex = false;
-  
-  if (useIndex && hasIndex()) {
-    results = searchWithIndex(query, limit);
-    usedIndex = true;
-  }
-  
-  if (!results) {
-    results = searchWithFileScan(query, limit);
-    usedIndex = false;
-  }
+  const results = searchWithFileScan(query, limit);
+  const usedIndex = false;
   
   return {
     query,

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Get backlinks to a specific note with SQLite index support
+ * Get backlinks to a specific note
  * Version: 2.0.0
  */
 

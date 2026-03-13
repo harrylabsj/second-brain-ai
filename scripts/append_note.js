@@ -6,7 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { VAULT_PATH, readVaultDir, parseFrontmatter, indexNote, getDb } = require('./lib/common');
+const { VAULT_PATH, readVaultDir, parseFrontmatter, indexNote, getDb, requireWriteApproval } = require('./lib/common');
 
 function findNoteFile(title) {
   if (!fs.existsSync(VAULT_PATH)) return null;
@@ -27,6 +27,7 @@ function findNoteFile(title) {
 }
 
 function appendNote(data) {
+  requireWriteApproval(data, 'allow_write');
   if (!data.title) return { error: 'Title is required' };
   if (!data.content) return { error: 'Content is required' };
   
