@@ -6,7 +6,15 @@
 const fs = require('fs');
 const path = require('path');
 
-const VAULT_PATH = process.env.SECOND_BRAIN_VAULT || path.join(process.env.HOME, 'Documents', 'SecondBrain');
+function resolveVaultPath() {
+  const raw = process.env.SECOND_BRAIN_VAULT;
+  if (!raw || !raw.trim()) {
+    throw new Error('SECOND_BRAIN_VAULT is required. Set it to an explicit local Markdown vault path before using this skill.');
+  }
+  return path.resolve(raw);
+}
+
+const VAULT_PATH = resolveVaultPath();
 const INDEX_DIR = path.join(VAULT_PATH, '.secondbrain');
 const INDEX_DB_PATH = path.join(INDEX_DIR, 'index.db');
 

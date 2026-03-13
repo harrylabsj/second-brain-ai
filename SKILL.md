@@ -1,28 +1,36 @@
 ---
 name: second-brain-ai
-description: Read, capture, search, relate, and assemble context from Markdown knowledge bases with SQLite indexing and smart linking. Use when the user wants a Second Brain / external brain / knowledge-base memory layer for notes, including saving ideas, searching past notes, finding related notes or backlinks, building context packs, appending to existing notes, or getting smart link suggestions.
+description: Read, capture, search, relate, and assemble context from a user-specified local Markdown knowledge base with optional SQLite indexing and smart linking. Use when the user explicitly wants a Second Brain / external brain / note-vault memory layer for Markdown notes, including saving ideas, searching past notes, finding related notes or backlinks, building context packs, appending to existing notes, or getting smart link suggestions. Requires an explicit SECOND_BRAIN_VAULT path; do not use for broad filesystem access.
 ---
 
-# Second Brain AI Skill v2.0.0
+# Second Brain AI Skill v2.0.1
 
-A lightweight skill for managing Markdown-based knowledge bases (Obsidian/Logseq style) with SQLite indexing for fast search and smart link suggestions.
+A lightweight skill for managing a user-chosen Markdown knowledge base (Obsidian/Logseq style) with optional SQLite indexing for fast search and smart link suggestions.
 
 ## Requirements
 
 - Node.js >= 16.0.0
 - A local directory containing Markdown files (.md)
+- The environment variable `SECOND_BRAIN_VAULT` must be set explicitly
 - Optional: Frontmatter support (YAML)
 - Optional: WikiLinks support `[[Note Title]]`
 
 ## Configuration
 
-Set the vault path via environment variable:
+Set the vault path via environment variable before running any script:
 
 ```bash
-export SECOND_BRAIN_VAULT="/path/to/your/vault"
+export SECOND_BRAIN_VAULT="/absolute/path/to/your/vault"
 ```
 
-Or use the default: `~/Documents/SecondBrain`
+This skill no longer writes to a default home-directory vault automatically. The vault path must be explicitly provided by the user.
+
+## Safety boundaries
+
+- Only use this skill with a vault path the user explicitly chose.
+- Do not use it for broad filesystem search outside the configured vault.
+- All write operations are limited to the configured vault path.
+- SQLite indexing is optional; if the dependency is unavailable, the skill falls back to file scanning.
 
 ## Tools
 
@@ -361,4 +369,63 @@ Run the test suite:
 
 ```bash
 npm test                    # Run all tests
-npm run test:init          # Test
+npm run test:init          # Test vault initialization
+npm run test:capture       # Test note capture
+npm run test:append        # Test append note
+npm run test:search        # Test search
+npm run test:related       # Test find related
+npm run test:backlinks     # Test backlinks
+npm run test:context       # Test context pack
+npm run test:suggest       # Test link suggestions
+```
+
+## Example Usage
+
+```bash
+# Initialize vault
+node scripts/init_vault.js
+
+# Capture an idea
+node scripts/capture_note.js '{"title":"AI 重构电商","content":"AI agent 可以替代平台撮合","type":"idea","tags":["ai","电商"]}'
+
+# Append to existing note
+node scripts/append_note.js '{"title":"AI 重构电商","content":"补充想法...","section":"更新"}'
+
+# Search notes
+node scripts/search_notes.js '{"query":"AI agent","limit":5}'
+
+# Find related notes
+node scripts/find_related.js '{"topic":"OpenClaw"}'
+
+# Get backlinks
+node scripts/get_backlinks.js '{"note_title":"OpenClaw"}'
+
+# Build context pack
+node scripts/build_context_pack.js '{"topic":"AI 电商","limit":10}'
+
+# Suggest links for a note
+node scripts/suggest_links.js '{"title":"AI 重构电商","limit":5}'
+
+# Rebuild index
+node scripts/rebuild_index.js
+```
+
+## Limitations (v2.0.0)
+
+- SQLite requires `better-sqlite3` (auto-fallback to file scan if unavailable)
+- Keyword-based search (no semantic/vector search yet)
+- Single vault support
+- No conflict detection for concurrent edits
+- No built-in sync/replication
+
+## Future Roadmap
+
+- Vector embeddings for semantic search
+- Cross-vault search
+- Automatic daily review generation
+- Graph visualization export
+- Web UI for browsing
+
+## License
+
+MIT
