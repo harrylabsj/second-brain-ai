@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Initialize a new Second Brain vault with SQLite index
+ * Initialize a new Second Brain vault
  * Version: 2.0.0
  */
 
@@ -64,15 +64,13 @@ function initVault() {
     fs.writeFileSync(path.join(VAULT_PATH, 'README.md'), README_CONTENT);
     fs.writeFileSync(path.join(VAULT_PATH, '.secondbrainignore'), GITIGNORE_CONTENT);
     
-    // Initialize SQLite index
-    const { rebuildIndex } = require('./lib/common');
-    const indexResult = rebuildIndex();
+    const indexResult = { status: 'skipped' };
     
     console.log(JSON.stringify({
       status: 'success',
       path: VAULT_PATH,
       folders: FOLDERS,
-      index: indexResult.status === 'success' ? INDEX_DB_PATH : null,
+      index: null,
       message: 'Vault initialized successfully'
     }, null, 2));
   } catch (e) {

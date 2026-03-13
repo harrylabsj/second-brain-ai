@@ -1,11 +1,11 @@
 ---
 name: second-brain-ai
-description: Read, capture, search, relate, and assemble context from a user-specified local Markdown knowledge base with optional SQLite indexing and smart linking. Use when the user explicitly wants a Second Brain / external brain / note-vault memory layer for Markdown notes, including saving ideas, searching past notes, finding related notes or backlinks, building context packs, appending to existing notes, or getting smart link suggestions. Requires an explicit SECOND_BRAIN_VAULT path; do not use for broad filesystem access.
+description: Read, capture, search, relate, and assemble context from a user-specified local Markdown knowledge base with file-based search and smart linking. Use when the user explicitly wants a Second Brain / external brain / note-vault memory layer for Markdown notes, including saving ideas, searching past notes, finding related notes or backlinks, building context packs, appending to existing notes, or getting smart link suggestions. Requires an explicit SECOND_BRAIN_VAULT path; do not use for broad filesystem access.
 ---
 
 # Second Brain AI Skill v2.0.1
 
-A lightweight skill for managing a user-chosen Markdown knowledge base (Obsidian/Logseq style) with optional SQLite indexing for fast search and smart link suggestions.
+A lightweight skill for managing a user-chosen Markdown knowledge base (Obsidian/Logseq style) with file-based search and smart link suggestions.
 
 ## Requirements
 
@@ -30,13 +30,13 @@ This skill no longer writes to a default home-directory vault automatically. The
 - Only use this skill with a vault path the user explicitly chose.
 - Do not use it for broad filesystem search outside the configured vault.
 - All write operations are limited to the configured vault path.
-- SQLite indexing is optional; if the dependency is unavailable, the skill falls back to file scanning.
+- This release uses file-based scanning only and avoids native database dependencies.
 
 ## Tools
 
 ### 1. init_vault
 
-Initialize a new Second Brain vault with standard folder structure and SQLite index.
+Initialize a new Second Brain vault with standard folder structure.
 
 **Usage:** `node scripts/init_vault.js`
 
@@ -46,7 +46,7 @@ Initialize a new Second Brain vault with standard folder structure and SQLite in
   "status": "success",
   "path": "/Users/.../Documents/SecondBrain",
   "folders": ["00-Inbox", "01-Daily", "02-Ideas", ...],
-  "index": "/Users/.../.secondbrain/index.db"
+  "index": null
 }
 ```
 
@@ -54,7 +54,7 @@ Initialize a new Second Brain vault with standard folder structure and SQLite in
 
 ### 2. search_notes
 
-Search for notes by keywords in title or content. Uses SQLite index with BM25 ranking.
+Search for notes by keywords in title or content using file-based scanning.
 
 **Input Protocol:**
 ```json
@@ -276,7 +276,7 @@ Build a context pack for a topic (for agent consumption).
 
 ### 9. rebuild_index
 
-Rebuild the SQLite index from scratch (useful after external edits).
+Refresh the local note scan state after external edits.
 
 **Input Protocol:**
 ```json
@@ -314,7 +314,7 @@ vault/
 
 ## Index Structure
 
-SQLite index stored in `.secondbrain/index.db`:
+Local skill metadata may be stored in `.secondbrain/`:
 
 - **notes** - Note metadata (path, title, type, created, updated)
 - **note_content** - Full-text searchable content (FTS5)
@@ -412,7 +412,7 @@ node scripts/rebuild_index.js
 
 ## Limitations (v2.0.0)
 
-- SQLite requires `better-sqlite3` (auto-fallback to file scan if unavailable)
+- This release avoids native database dependencies and uses file-based scanning only
 - Keyword-based search (no semantic/vector search yet)
 - Single vault support
 - No conflict detection for concurrent edits

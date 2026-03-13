@@ -1,6 +1,6 @@
 /**
  * Common utilities for Second Brain AI v2.0
- * Includes SQLite index support with file-based fallback
+ * File-based utilities only; no native database dependency
  */
 
 const fs = require('fs');
@@ -24,77 +24,15 @@ const DEFAULT_IGNORE_PATTERNS = [
   'README.md', 'README', 'CHANGELOG.md', 'LICENSE.md', 'CONTRIBUTING.md', 'templates'
 ];
 
-let dbInstance = null;
-
-/**
- * Get SQLite database instance (lazy load)
- */
 function getDb() {
-  if (dbInstance) return dbInstance;
-  
-  try {
-    const Database = require('better-sqlite3');
-    if (!fs.existsSync(INDEX_DIR)) {
-      fs.mkdirSync(INDEX_DIR, { recursive: true });
-    }
-    dbInstance = new Database(INDEX_DB_PATH);
-    initDbSchema(dbInstance);
-    return dbInstance;
-  } catch (e) {
-    // SQLite not available, return null for fallback mode
-    return null;
-  }
+  return null;
 }
 
-/**
- * Initialize database schema
- */
-function initDbSchema(db) {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS notes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      path TEXT UNIQUE NOT NULL,
-      title TEXT,
-      type TEXT,
-      created TEXT,
-      updated TEXT,
-      status TEXT,
-      content_hash TEXT
-    );
-    
-    CREATE TABLE IF NOT EXISTS note_content (
-      note_id INTEGER PRIMARY KEY,
-      title TEXT,
-      body TEXT,
-      FOREIGN KEY (note_id) REFERENCES notes(id) ON DELETE CASCADE
-    );
-    
-    CREATE VIRTUAL TABLE IF NOT EXISTS note_content_fts USING fts5(
-      title, body, content='note_content', content_rowid='note_id'
-    );
-    
-    CREATE TABLE IF NOT EXISTS links (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      source_path TEXT NOT NULL,
-      target_title TEXT NOT NULL,
-      UNIQUE(source_path, target_title)
-    );
-    
-    CREATE TABLE IF NOT EXISTS tags (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      note_path TEXT NOT NULL,
-      tag TEXT NOT NULL,
-      UNIQUE(note_path, tag)
-    );
-    
-    CREATE INDEX IF NOT EXISTS idx_tags_tag ON tags(tag);
-    CREATE INDEX IF NOT EXISTS idx_links_target ON links(target_title);
-    CREATE INDEX IF NOT EXISTS idx_notes_title ON notes(title);
-  `);
+function hasIndex() {
+  return false;
 }
 
-/**
- * Get the vault path
+function getVaultPath() {
  */
 function getVaultPath() {
   return VAULT_PATH;
@@ -110,10 +48,6 @@ function getIndexPath() {
 /**
  * Check if index is available
  */
-function hasIndex() {
-  return getDb() !== null && fs.existsSync(INDEX_DB_PATH);
-}
-
 /**
  * Load ignore patterns from .secondbrainignore file
  */
@@ -344,7 +278,7 @@ function indexNote(db, filePath, content) {
  */
 function rebuildIndex() {
   const db = getDb();
-  if (!db) return { status: 'error', error: 'SQLite not available' };
+  if (!db) return { status: 'skipped', reason: 'Database indexing disabled in this file-based release' };
   
   const startTime = Date.now();
   
@@ -400,24 +334,5 @@ function findNoteByTitle(title) {
 }
 
 module.exports = {
-  getVaultPath,
-  getIndexPath,
-  VAULT_PATH,
-  INDEX_DB_PATH,
-  hasIndex,
-  getDb,
-  initDbSchema,
-  loadIgnorePatterns,
-  shouldIgnore,
-  readVaultDir,
-  parseFrontmatter,
-  extractWikiLinks,
-  extractTags,
-  generateId,
-  sanitizeFilename,
-  buildFrontmatter,
-  resolveInput,
-  indexNote,
-  rebuildIndex,
-  findNoteByTitle
+  VAULT_PATH, INDEX_DB_PATH, getDb, hasIndex, getVaultPath, getIndexPath, loadIgnorePatterns, shouldIgnore, readVaultDir, parseFrontmatter, extractWikiLinks, extractTags, generateId, sanitizeFilename, buildFrontmatter, resolveInput, findNoteByTitle, indexNote, rebuildIndex
 };

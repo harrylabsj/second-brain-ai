@@ -1,7 +1,7 @@
 {
   "name": "second-brain-ai",
-  "version": "2.0.1",
-  "description": "Second Brain for local markdown vaults with explicit vault-path configuration, optional SQLite indexing, backlinks, context packs, and smart linking",
+  "version": "2.0.3",
+  "description": "Second Brain for local markdown vaults with explicit vault-path configuration, file-based search, backlinks, context packs, and smart linking",
   "main": "scripts/search_notes.js",
   "scripts": {
     "test": "node test/run-tests.js",
@@ -32,15 +32,11 @@
     "pkm",
     "notes",
     "zettelkasten",
-    "sqlite",
     "ai"
   ],
   "author": "",
   "license": "MIT",
   "engines": {
     "node": ">=16.0.0"
-  },
-  "dependencies": {
-    "better-sqlite3": "^11.8.1"
   }
 }
