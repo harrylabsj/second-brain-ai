@@ -61,7 +61,7 @@ function captureNote(data) {
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
-  console.log(JSON.stringify({ error: 'Usage: capture_note.js \'{...}\'', required: ['title'], optional: ['content', 'type', 'tags', 'links'] }, null, 2));
+  console.log(JSON.stringify({ error: 'Usage: capture_note.js \'{...}\'', required: ['title', 'allow_write'], optional: ['content', 'type', 'tags', 'links'] }, null, 2));
   process.exit(1);
 }
 

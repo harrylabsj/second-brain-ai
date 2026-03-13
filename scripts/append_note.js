@@ -119,7 +119,7 @@ status: active
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
-  console.log(JSON.stringify({ error: 'Usage: append_note.js \'{...}\'', required: ['title', 'content'], optional: ['section', 'timestamp'] }, null, 2));
+  console.log(JSON.stringify({ error: 'Usage: append_note.js \'{...}\'', required: ['title', 'content', 'allow_write'], optional: ['section', 'timestamp'] }, null, 2));
   process.exit(1);
 }
 
