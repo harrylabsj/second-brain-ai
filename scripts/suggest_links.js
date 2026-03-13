@@ -6,7 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { VAULT_PATH, readVaultDir, parseFrontmatter, extractWikiLinks, extractTags, resolveInput, getDb, hasIndex } = require('./lib/common');
+const { resolveVaultPath, getPaths, VAULT_PATH, readVaultDir, parseFrontmatter, extractWikiLinks, extractTags, resolveInput, getDb, hasIndex } = require('./lib/common');
 
 function suggestLinks(title, content = null, limit = 5) {
   if (!title) return { error: 'Title is required' };
@@ -14,7 +14,7 @@ function suggestLinks(title, content = null, limit = 5) {
     return { error: `Vault not found: ${VAULT_PATH}` };
   }
   
-  const files = readVaultDir(VAULT_PATH);
+  const files = readVaultDir(vaultPath);
   const titleLower = title.toLowerCase();
   
   // Get tags and terms from input content or find the note
@@ -116,7 +116,7 @@ function suggestLinks(title, content = null, limit = 5) {
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
-  console.log(JSON.stringify({ error: 'Usage: suggest_links.js \'{...}\'', required: ['title'], optional: ['content', 'limit'] }, null, 2));
+  console.log(JSON.stringify({ error: 'Usage (include vault_path unless SECOND_BRAIN_VAULT is set): suggest_links.js \'{...}\'', required: ['title'], optional: ['content', 'limit'] }, null, 2));
   process.exit(1);
 }
 

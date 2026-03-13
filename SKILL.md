@@ -1,14 +1,14 @@
 ---
 name: second-brain-ai
-description: Read, capture, search, relate, and assemble context from a user-specified local Markdown knowledge base using file-based scanning and smart linking. Use when the user explicitly wants a Second Brain / note-vault memory layer for Markdown notes, including saving ideas, searching past notes, finding related notes or backlinks, building context packs, appending to existing notes, or getting smart link suggestions. Requires an explicit SECOND_BRAIN_VAULT path; do not use for broad filesystem access.
+description: Read, capture, search, relate, and assemble context from a user-specified local Markdown knowledge base using file-based scanning and smart linking. Use when the user explicitly wants a Second Brain / note-vault memory layer for Markdown notes, including saving ideas, searching past notes, finding related notes or backlinks, building context packs, appending to existing notes, or getting smart link suggestions. Requires an explicit vault_path input (preferred) or an optional SECOND_BRAIN_VAULT fallback; do not use for broad filesystem access.
 env:
   - name: SECOND_BRAIN_VAULT
-    required: true
+    required: false
     secret: false
-    description: Absolute path to the user-selected local Markdown vault. This skill is limited to that vault path.
+    description: Optional fallback path to the local Markdown vault. Preferred usage is to pass vault_path explicitly in the tool input.
 ---
 
-# Second Brain AI Skill v2.1.4
+# Second Brain AI Skill v2.1.5
 
 A lightweight skill for working with a user-chosen Markdown knowledge base (Obsidian/Logseq style) with controlled write operations, file-based search, and smart link suggestions.
 
@@ -16,19 +16,19 @@ A lightweight skill for working with a user-chosen Markdown knowledge base (Obsi
 
 - Node.js >= 16.0.0
 - A local directory containing Markdown files (.md)
-- The environment variable `SECOND_BRAIN_VAULT` must be set explicitly
+- A `vault_path` input is required unless the optional `SECOND_BRAIN_VAULT` fallback is set
 - Optional: Frontmatter support (YAML)
 - Optional: WikiLinks support `[[Note Title]]`
 
 ## Configuration
 
-Set the vault path via environment variable before running any script:
+Preferred: pass `vault_path` in the input payload for each action. Optional fallback: set the environment variable before running scripts:
 
 ```bash
 export SECOND_BRAIN_VAULT="/absolute/path/to/your/vault"
 ```
 
-This skill no longer writes to a default home-directory vault automatically. The vault path must be explicitly provided by the user.
+This skill no longer writes to a default home-directory vault automatically. The vault path must be explicitly provided by the user, preferably as `vault_path` in the input payload.
 
 ## Safety boundaries
 
@@ -53,6 +53,7 @@ Search for notes by keywords in title or content using file-based scanning.
 **Input Protocol:**
 ```json
 {
+  "vault_path": "/absolute/path/to/vault",  // Preferred unless env fallback is set
   "query": "AI agent",    // Required (aliases: topic, title, q)
   "limit": 5,             // Optional, default: 5
   "use_index": true       // Optional, default: true
@@ -89,6 +90,7 @@ Find notes related to a given topic or note.
 **Input Protocol:**
 ```json
 {
+  "vault_path": "/absolute/path/to/vault",  // Preferred unless env fallback is set
   "topic": "OpenClaw",    // Required (aliases: title, note_title, query, q)
   "limit": 5              // Optional, default: 5
 }
@@ -121,6 +123,7 @@ Get smart link suggestions for a note or topic based on content similarity.
 **Input Protocol:**
 ```json
 {
+  "vault_path": "/absolute/path/to/vault",  // Preferred unless env fallback is set
   "title": "My Note",       // Required: Note title to find links for
   "content": "...",         // Optional: Content to analyze (if note doesn't exist)
   "limit": 5                // Optional: Max suggestions (default: 5)
@@ -153,6 +156,7 @@ Get all notes that link to a specific note.
 **Input Protocol:**
 ```json
 {
+  "vault_path": "/absolute/path/to/vault",  // Preferred unless env fallback is set
   "note_title": "OpenClaw"    // Required (alias: title)
 }
 ```
@@ -184,6 +188,7 @@ Build a context pack for a topic (for agent consumption).
 **Input Protocol:**
 ```json
 {
+  "vault_path": "/absolute/path/to/vault",  // Preferred unless env fallback is set
   "topic": "AI电商",      // Required (aliases: query, title, q)
   "limit": 10             // Optional, default: 10
 }

@@ -6,23 +6,31 @@
 const fs = require('fs');
 const path = require('path');
 
-function resolveVaultPath() {
-  const raw = process.env.SECOND_BRAIN_VAULT;
-  if (!raw || !raw.trim()) {
-    throw new Error('SECOND_BRAIN_VAULT is required. Set it to an explicit local Markdown vault path before using this skill.');
+function resolveVaultPath(input = null) {
+  const candidate = input && typeof input === 'object' && input.vault_path ? String(input.vault_path) : (process.env.SECOND_BRAIN_VAULT || '');
+  if (!candidate || !candidate.trim()) {
+    throw new Error('A vault_path input is required. You may also set SECOND_BRAIN_VAULT as an optional fallback.');
   }
-  return path.resolve(raw);
+  return path.resolve(candidate);
 }
 
-const VAULT_PATH = resolveVaultPath();
-const INDEX_DIR = path.join(VAULT_PATH, '.secondbrain');
-const INDEX_DB_PATH = path.join(INDEX_DIR, 'index.db');
+const VAULT_PATH = process.env.SECOND_BRAIN_VAULT ? path.resolve(process.env.SECOND_BRAIN_VAULT) : null;
+const INDEX_DIR = VAULT_PATH ? path.join(VAULT_PATH, '.secondbrain') : null;
+const INDEX_DB_PATH = INDEX_DIR ? path.join(INDEX_DIR, 'index.db') : null;
 
 // Files/directories to ignore during scan
 const DEFAULT_IGNORE_PATTERNS = [
   '.git', '.obsidian', '.logseq', '.trash', 'node_modules', '.DS_Store',
   'README.md', 'README', 'CHANGELOG.md', 'LICENSE.md', 'CONTRIBUTING.md', 'templates'
 ];
+
+
+function getPaths(input = null) {
+  const vault = resolveVaultPath(input);
+  const indexDir = path.join(vault, '.secondbrain');
+  const indexDbPath = path.join(indexDir, 'index.db');
+  return { vault, indexDir, indexDbPath };
+}
 
 function getDb() {
   return null;
@@ -341,5 +349,5 @@ function findNoteByTitle(title) {
 }
 
 module.exports = {
-  VAULT_PATH, INDEX_DB_PATH, getDb, hasIndex, getVaultPath, getIndexPath, loadIgnorePatterns, shouldIgnore, readVaultDir, parseFrontmatter, extractWikiLinks, extractTags, generateId, sanitizeFilename, buildFrontmatter, resolveInput, findNoteByTitle, indexNote, rebuildIndex, requireWriteApproval
+  VAULT_PATH, INDEX_DB_PATH, resolveVaultPath, getPaths, getDb, hasIndex, getVaultPath, getIndexPath, loadIgnorePatterns, shouldIgnore, readVaultDir, parseFrontmatter, extractWikiLinks, extractTags, generateId, sanitizeFilename, buildFrontmatter, resolveInput, findNoteByTitle, indexNote, rebuildIndex, requireWriteApproval
 };

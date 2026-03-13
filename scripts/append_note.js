@@ -6,11 +6,11 @@
 
 const fs = require('fs');
 const path = require('path');
-const { VAULT_PATH, readVaultDir, parseFrontmatter, indexNote, getDb, requireWriteApproval } = require('./lib/common');
+const { resolveVaultPath, getPaths, VAULT_PATH, readVaultDir, parseFrontmatter, indexNote, getDb, requireWriteApproval } = require('./lib/common');
 
 function findNoteFile(title) {
   if (!fs.existsSync(VAULT_PATH)) return null;
-  const files = readVaultDir(VAULT_PATH);
+  const files = readVaultDir(vaultPath);
   const titleLower = title.toLowerCase();
   
   for (const filePath of files) {
@@ -27,6 +27,7 @@ function findNoteFile(title) {
 }
 
 function appendNote(data) {
+  const { vault: vaultPath } = getPaths(data);
   requireWriteApproval(data, 'allow_write');
   if (!data.title) return { error: 'Title is required' };
   if (!data.content) return { error: 'Content is required' };
@@ -119,7 +120,7 @@ status: active
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
-  console.log(JSON.stringify({ error: 'Usage: append_note.js \'{...}\'', required: ['title', 'content', 'allow_write'], optional: ['section', 'timestamp'] }, null, 2));
+  console.log(JSON.stringify({ error: 'Usage (include vault_path unless SECOND_BRAIN_VAULT is set): append_note.js \'{...}\'', required: ['title', 'content', 'allow_write'], optional: ['section', 'timestamp'] }, null, 2));
   process.exit(1);
 }
 

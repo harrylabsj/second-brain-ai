@@ -6,7 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { VAULT_PATH, INDEX_DB_PATH, requireWriteApproval } = require('./lib/common');
+const { resolveVaultPath, getPaths, VAULT_PATH, INDEX_DB_PATH, requireWriteApproval } = require('./lib/common');
 
 const FOLDERS = [
   '00-Inbox', '01-Daily', '02-Ideas', '03-Projects',
@@ -48,6 +48,7 @@ node_modules/
 `;
 
 function initVault(input = {}) {
+  const { vault: vaultPath, indexDir } = getPaths(input);
   requireWriteApproval(input, 'allow_write');
   if (fs.existsSync(VAULT_PATH)) {
     const existingFiles = fs.readdirSync(VAULT_PATH).filter(f => !f.startsWith('.'));
@@ -58,12 +59,12 @@ function initVault(input = {}) {
   }
   
   try {
-    fs.mkdirSync(VAULT_PATH, { recursive: true });
+    fs.mkdirSync(vaultPath, { recursive: true });
     for (const folder of FOLDERS) {
-      fs.mkdirSync(path.join(VAULT_PATH, folder), { recursive: true });
+      fs.mkdirSync(path.join(vaultPath, folder), { recursive: true });
     }
-    fs.writeFileSync(path.join(VAULT_PATH, 'README.md'), README_CONTENT);
-    fs.writeFileSync(path.join(VAULT_PATH, '.secondbrainignore'), GITIGNORE_CONTENT);
+    fs.writeFileSync(path.join(vaultPath, 'README.md'), README_CONTENT);
+    fs.writeFileSync(path.join(vaultPath, '.secondbrainignore'), GITIGNORE_CONTENT);
     
     const indexResult = { status: 'skipped' };
     

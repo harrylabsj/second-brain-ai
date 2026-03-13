@@ -6,7 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { VAULT_PATH, readVaultDir, parseFrontmatter, extractWikiLinks, resolveInput, getDb, hasIndex, findNoteByTitle } = require('./lib/common');
+const { resolveVaultPath, getPaths, VAULT_PATH, readVaultDir, parseFrontmatter, extractWikiLinks, resolveInput, getDb, hasIndex, findNoteByTitle } = require('./lib/common');
 
 function getBacklinks(noteTitle) {
   if (!noteTitle || typeof noteTitle !== 'string') {
@@ -31,7 +31,7 @@ function getBacklinks(noteTitle) {
   }
   
   const titleLower = noteTitle.toLowerCase();
-  const files = readVaultDir(VAULT_PATH);
+  const files = readVaultDir(vaultPath);
   
   for (const filePath of files) {
     try {
@@ -78,7 +78,7 @@ function getBacklinks(noteTitle) {
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
-  console.log(JSON.stringify({ error: 'Usage: get_backlinks.js \'{...}\'', required: ['note_title'], optional: [] }, null, 2));
+  console.log(JSON.stringify({ error: 'Usage (include vault_path unless SECOND_BRAIN_VAULT is set): get_backlinks.js \'{...}\'', required: ['note_title'], optional: [] }, null, 2));
   process.exit(1);
 }
 

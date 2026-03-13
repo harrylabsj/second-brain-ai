@@ -6,7 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { VAULT_PATH, readVaultDir, parseFrontmatter, resolveInput, getDb, hasIndex } = require('./lib/common');
+const { resolveVaultPath, getPaths, VAULT_PATH, readVaultDir, parseFrontmatter, resolveInput, getDb, hasIndex } = require('./lib/common');
 
 function searchWithIndex(query, limit = 5) {
   const db = getDb();
@@ -47,7 +47,7 @@ function searchWithIndex(query, limit = 5) {
 function searchWithFileScan(query, limit = 5) {
   if (!fs.existsSync(VAULT_PATH)) return [];
   
-  const files = readVaultDir(VAULT_PATH);
+  const files = readVaultDir(vaultPath);
   const results = [];
   const queryLower = query.toLowerCase();
   const terms = queryLower.split(/\s+/).filter(t => t.length > 0);
@@ -114,7 +114,7 @@ function searchNotes(query, limit = 5, useIndex = true) {
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
-  console.log(JSON.stringify({ error: 'Usage: search_notes.js \'{...}\'', required: ['query'], optional: ['limit', 'use_index'] }, null, 2));
+  console.log(JSON.stringify({ error: 'Usage (include vault_path unless SECOND_BRAIN_VAULT is set): search_notes.js \'{...}\'', required: ['query'], optional: ['limit', 'use_index'] }, null, 2));
   process.exit(1);
 }
 

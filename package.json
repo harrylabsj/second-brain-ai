@@ -1,6 +1,6 @@
 {
   "name": "second-brain-ai",
-  "version": "2.1.4",
+  "version": "2.1.5",
   "description": "Second Brain for a user-specified local markdown vault with controlled write operations, explicit vault-path configuration, search, backlinks, context packs, and smart linking",
   "main": "scripts/search_notes.js",
   "scripts": {
@@ -35,9 +35,9 @@
     "env": [
       {
         "name": "SECOND_BRAIN_VAULT",
-        "required": true,
+        "required": false,
         "secret": false,
-        "description": "Absolute path to the user-selected local Markdown vault that this skill may read and, with explicit allow_write=true, modify within that vault only."
+        "description": "Optional fallback path to the local Markdown vault. Preferred usage is to pass vault_path explicitly in the tool input."
       }
     ]
   }

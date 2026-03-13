@@ -6,7 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { VAULT_PATH, sanitizeFilename, buildFrontmatter, indexNote, getDb, requireWriteApproval } = require('./lib/common');
+const { resolveVaultPath, getPaths, VAULT_PATH, sanitizeFilename, buildFrontmatter, indexNote, getDb, requireWriteApproval } = require('./lib/common');
 
 const TYPE_FOLDERS = {
   idea: '02-Ideas', project: '03-Projects', person: '04-People',
@@ -15,6 +15,7 @@ const TYPE_FOLDERS = {
 };
 
 function captureNote(data) {
+  const { vault: vaultPath } = getPaths(data);
   requireWriteApproval(data, 'allow_write');
   if (!data.title) return { error: 'Title is required' };
   if (!fs.existsSync(VAULT_PATH)) {
@@ -23,7 +24,7 @@ function captureNote(data) {
   }
   
   const folderName = TYPE_FOLDERS[data.type] || TYPE_FOLDERS.default;
-  const folderPath = path.join(VAULT_PATH, folderName);
+  const folderPath = path.join(vaultPath, folderName);
   if (!fs.existsSync(folderPath)) fs.mkdirSync(folderPath, { recursive: true });
   
   const frontmatter = buildFrontmatter(data);
@@ -61,7 +62,7 @@ function captureNote(data) {
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
-  console.log(JSON.stringify({ error: 'Usage: capture_note.js \'{...}\'', required: ['title', 'allow_write'], optional: ['content', 'type', 'tags', 'links'] }, null, 2));
+  console.log(JSON.stringify({ error: 'Usage (include vault_path unless SECOND_BRAIN_VAULT is set): capture_note.js \'{...}\'', required: ['title', 'allow_write'], optional: ['content', 'type', 'tags', 'links'] }, null, 2));
   process.exit(1);
 }
 

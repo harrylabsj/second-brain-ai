@@ -6,7 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { VAULT_PATH, readVaultDir, parseFrontmatter, extractWikiLinks, resolveInput, getDb, hasIndex } = require('./lib/common');
+const { resolveVaultPath, getPaths, VAULT_PATH, readVaultDir, parseFrontmatter, extractWikiLinks, resolveInput, getDb, hasIndex } = require('./lib/common');
 
 function findRelated(topic, limit = 5) {
   if (!topic || typeof topic !== 'string') {
@@ -16,7 +16,7 @@ function findRelated(topic, limit = 5) {
     return { error: `Vault not found: ${VAULT_PATH}` };
   }
   
-  const files = readVaultDir(VAULT_PATH);
+  const files = readVaultDir(vaultPath);
   const topicLower = topic.toLowerCase();
   const topicTerms = topicLower.split(/\s+/).filter(t => t.length > 0);
   const topicNotes = [];
@@ -110,7 +110,7 @@ function findRelated(topic, limit = 5) {
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
-  console.log(JSON.stringify({ error: 'Usage: find_related.js \'{...}\'', required: ['topic'], optional: ['limit'] }, null, 2));
+  console.log(JSON.stringify({ error: 'Usage (include vault_path unless SECOND_BRAIN_VAULT is set): find_related.js \'{...}\'', required: ['topic'], optional: ['limit'] }, null, 2));
   process.exit(1);
 }
 
