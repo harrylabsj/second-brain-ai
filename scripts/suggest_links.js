@@ -6,12 +6,12 @@
 
 const fs = require('fs');
 const path = require('path');
-const { resolveVaultPath, getPaths, VAULT_PATH, readVaultDir, parseFrontmatter, extractWikiLinks, extractTags, resolveInput, getDb, hasIndex } = require('./lib/common');
+const { resolveVaultPath, getPaths, readVaultDir, parseFrontmatter, extractWikiLinks, extractTags, resolveInput, getDb, hasIndex } = require('./lib/common');
 
 function suggestLinks(title, content = null, limit = 5) {
   if (!title) return { error: 'Title is required' };
-  if (!fs.existsSync(VAULT_PATH)) {
-    return { error: `Vault not found: ${VAULT_PATH}` };
+  if (!fs.existsSync(vaultPath)) {
+    return { error: `Vault not found: ${vaultPath}` };
   }
   
   const files = readVaultDir(vaultPath);
@@ -93,7 +93,7 @@ function suggestLinks(title, content = null, limit = 5) {
         
         scored.push({
           note_title: fileTitle,
-          note_path: path.relative(VAULT_PATH, filePath),
+          note_path: path.relative(filePath),
           reason: reasons.join(', '),
           confidence: parseFloat(confidence.toFixed(2)),
           shared_tags: sharedTags.slice(0, 5),

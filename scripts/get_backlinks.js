@@ -6,14 +6,14 @@
 
 const fs = require('fs');
 const path = require('path');
-const { resolveVaultPath, getPaths, VAULT_PATH, readVaultDir, parseFrontmatter, extractWikiLinks, resolveInput, getDb, hasIndex, findNoteByTitle } = require('./lib/common');
+const { resolveVaultPath, getPaths, readVaultDir, parseFrontmatter, extractWikiLinks, resolveInput, getDb, hasIndex, findNoteByTitle } = require('./lib/common');
 
 function getBacklinks(noteTitle) {
   if (!noteTitle || typeof noteTitle !== 'string') {
     return { error: 'Missing required field: note_title' };
   }
-  if (!fs.existsSync(VAULT_PATH)) {
-    return { error: `Vault not found: ${VAULT_PATH}` };
+  if (!fs.existsSync(vaultPath)) {
+    return { error: `Vault not found: ${vaultPath}` };
   }
   
   // Find target note
@@ -58,7 +58,7 @@ function getBacklinks(noteTitle) {
         }
         
         backlinks.push({
-          path: path.relative(VAULT_PATH, filePath),
+          path: path.relative(filePath),
           title,
           context: context || body.slice(0, 100) + '...',
           modified: fs.statSync(filePath).mtime.toISOString().split('T')[0]

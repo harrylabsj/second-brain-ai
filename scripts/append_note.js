@@ -1,117 +1,97 @@
 #!/usr/bin/env node
 /**
- * Append content to an existing note (creates if not exists)
- * Version: 2.0.0 - NEW in v2
+ * Append content to an existing note.
+ * Repair build: append entries must be attributed.
  */
 
 const fs = require('fs');
 const path = require('path');
-const { resolveVaultPath, getPaths, VAULT_PATH, readVaultDir, parseFrontmatter, indexNote, getDb, requireWriteApproval } = require('./lib/common');
+const { readVaultDir, parseFrontmatter, requireWriteApproval } = require('./lib/common');
 
 function findNoteFile(title) {
-  if (!fs.existsSync(VAULT_PATH)) return null;
+  if (!fs.existsSync(vaultPath)) return null;
   const files = readVaultDir(vaultPath);
   const titleLower = title.toLowerCase();
-  
+
   for (const filePath of files) {
     try {
       const content = fs.readFileSync(filePath, 'utf-8');
       const { frontmatter } = parseFrontmatter(content);
       const fileTitle = frontmatter.title || path.basename(filePath, '.md');
-      if (fileTitle.toLowerCase() === titleLower) {
-        return filePath;
-      }
-    } catch (e) {}
+      if (fileTitle.toLowerCase() === titleLower) return filePath;
+    } catch (_) {}
   }
   return null;
 }
 
-function appendNote(data) {
-  const { vault: vaultPath } = getPaths(data);
-  requireWriteApproval(data, 'allow_write');
-  if (!data.title) return { error: 'Title is required' };
-  if (!data.content) return { error: 'Content is required' };
-  
-  if (!fs.existsSync(VAULT_PATH)) {
-    try { fs.mkdirSync(VAULT_PATH, { recursive: true }); }
-    catch (e) { return { error: `Cannot create vault: ${e.message}` }; }
-  }
-  
-  let filePath = findNoteFile(data.title);
-  let isNew = false;
-  
-  if (!filePath) {
-    // Create new note in Inbox
-    const datePrefix = new Date().toISOString().slice(0, 10);
-    const safeTitle = data.title.replace(/[<>:"/\\|?*]/g, '-').replace(/\s+/g, '-').slice(0, 50);
-    const filename = `${datePrefix}-${safeTitle}.md`;
-    filePath = path.join(VAULT_PATH, '00-Inbox', filename);
-    if (!fs.existsSync(path.dirname(filePath))) {
-      fs.mkdirSync(path.dirname(filePath), { recursive: true });
+function updateFrontmatterUpdated(content, updated) {
+  if (/^---\n[\s\S]*?\n---/m.test(content)) {
+    if (/^---\n[\s\S]*?^updated:/m.test(content)) {
+      return content.replace(/^(---\n[\s\S]*?)^updated: [^\n]+/m, `$1updated: ${updated}`);
     }
-    
-    const today = new Date().toISOString().split('T')[0];
-    const frontmatter = `---
-id: ${today.replace(/-/g, '')}
-title: ${data.title}
-type: note
-created: ${today}
-updated: ${today}
-status: active
----
+    return content.replace(/^---\n/, `---\nupdated: ${updated}\n`);
+  }
+  return content;
+}
 
-# ${data.title}
-`;
-    fs.writeFileSync(filePath, frontmatter, 'utf-8');
-    isNew = true;
-  }
-  
-  // Read existing content
-  let content = fs.readFileSync(filePath, 'utf-8');
-  const { frontmatter, body } = parseFrontmatter(content);
-  
-  // Build append content
+function buildAppendBlock(data) {
+  const nowIso = new Date().toISOString();
   const timestamp = data.timestamp !== false;
-  const section = data.section || null;
-  const now = new Date().toISOString().replace('T', ' ').slice(0, 19);
-  
-  let appendContent = '';
-  if (section) {
-    appendContent = `\n\n## ${section}${timestamp ? ` (${now})` : ''}\n\n${data.content}\n`;
-  } else {
-    appendContent = `\n\n---\n\n${timestamp ? `*Added: ${now}*\n\n` : ''}${data.content}\n`;
+  const appendedBy = data.appended_by || data.by || data.author || data.actor;
+  if (!appendedBy || typeof appendedBy !== 'string' || !appendedBy.trim()) {
+    return { error: 'Missing required field: appended_by' };
   }
-  
-  // Find end of frontmatter and append
-  const fmMatch = content.match(/^---\n[\s\S]*?\n---\n/);
-  if (fmMatch) {
-    content = content.slice(0, fmMatch[0].length) + body + appendContent;
-  } else {
-    content = content + appendContent;
+
+  const marker = [
+    '> Append Record',
+    `> Added by: ${appendedBy.trim()}`,
+    ...(timestamp ? [`> Added at: ${nowIso}`] : []),
+    '',
+    data.content.trim(),
+    ''
+  ].join('\n');
+
+  if (data.section) {
+    return { block: `\n\n## ${data.section}\n\n${marker}\n`, appendedBy: appendedBy.trim(), addedAt: nowIso };
   }
-  
-  // Update frontmatter updated date
-  const today = new Date().toISOString().split('T')[0];
-  content = content.replace(/^(---\n[\s\S]*?)updated: [^\n]+/m, `$1updated: ${today}`);
-  if (!content.includes('updated:')) {
-    content = content.replace(/^---\n/, `---\nupdated: ${today}\n`);
+
+  return { block: `\n\n---\n\n${marker}\n`, appendedBy: appendedBy.trim(), addedAt: nowIso };
+}
+
+function appendNote(data) {
+  const vaultPath = getPaths(data).vault;
+  requireWriteApproval(data, 'allow_write');
+  if (!data.title) return { error: 'Missing required field: title' };
+  if (!data.content) return { error: 'Missing required field: content' };
+
+  if (!fs.existsSync(vaultPath)) {
+    return { error: `Vault not found: ${vaultPath}` };
   }
-  
+
+  const filePath = findNoteFile(data.title);
+  if (!filePath) {
+    return { error: `Note not found: ${data.title}` };
+  }
+
+  const append = buildAppendBlock(data);
+  if (append.error) return { error: append.error };
+
+  let content = fs.readFileSync(filePath, 'utf-8');
+  content = content.replace(/\s*$/, '');
+  content += append.block;
+  content = updateFrontmatterUpdated(content, new Date().toISOString().split('T')[0]);
+
   try {
     fs.writeFileSync(filePath, content, 'utf-8');
-    
-    // Re-index
-    const db = getDb();
-    if (db) {
-      try { indexNote(db, filePath, content); } catch (e) {}
-    }
-    
     return {
       status: 'success',
-      path: path.relative(VAULT_PATH, filePath),
+      path: path.relative(filePath),
       title: data.title,
-      action: isNew ? 'created' : 'appended',
-      section_added: section || null
+      action: 'appended',
+      section_added: data.section || null,
+      appended_by: append.appendedBy,
+      added_at: append.addedAt,
+      attribution_required: true
     };
   } catch (e) {
     return { error: `Failed to update note: ${e.message}` };
@@ -120,7 +100,11 @@ status: active
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
-  console.log(JSON.stringify({ error: 'Usage (include vault_path unless SECOND_BRAIN_VAULT is set): append_note.js \'{...}\'', required: ['title', 'content', 'allow_write'], optional: ['section', 'timestamp'] }, null, 2));
+  console.log(JSON.stringify({
+    error: 'Usage: append_note.js \'{...}\'',
+    required: ['title', 'content', 'allow_write', 'appended_by'],
+    optional: ['section', 'timestamp']
+  }, null, 2));
   process.exit(1);
 }
 
@@ -128,6 +112,7 @@ try {
   const input = JSON.parse(args[0]);
   const result = appendNote(input);
   console.log(JSON.stringify(result, null, 2));
+  if (result.error) process.exit(1);
 } catch (e) {
   console.log(JSON.stringify({ error: e.message }, null, 2));
   process.exit(1);

@@ -1,6 +1,6 @@
 {
   "name": "second-brain-ai",
-  "version": "2.1.5",
+  "version": "2.1.6",
   "description": "Second Brain for a user-specified local markdown vault with controlled write operations, explicit vault-path configuration, search, backlinks, context packs, and smart linking",
   "main": "scripts/search_notes.js",
   "scripts": {

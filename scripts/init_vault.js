@@ -6,7 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { resolveVaultPath, getPaths, VAULT_PATH, INDEX_DB_PATH, requireWriteApproval } = require('./lib/common');
+const { resolveVaultPath, getPaths, requireWriteApproval } = require('./lib/common');
 
 const FOLDERS = [
   '00-Inbox', '01-Daily', '02-Ideas', '03-Projects',
@@ -48,12 +48,13 @@ node_modules/
 `;
 
 function initVault(input = {}) {
-  const { vault: vaultPath, indexDir } = getPaths(input);
+  const vaultPath = getPaths(input).vault;
   requireWriteApproval(input, 'allow_write');
-  if (fs.existsSync(VAULT_PATH)) {
-    const existingFiles = fs.readdirSync(VAULT_PATH).filter(f => !f.startsWith('.'));
+  const { vault: vaultPath, indexDir } = getPaths(input);
+  if (fs.existsSync(vaultPath)) {
+    const existingFiles = fs.readdirSync(vaultPath).filter(f => !f.startsWith('.'));
     if (existingFiles.length > 0) {
-      console.log(JSON.stringify({ status: 'exists', path: VAULT_PATH }, null, 2));
+      console.log(JSON.stringify({ status: 'exists', path: vaultPath }, null, 2));
       return;
     }
   }
@@ -70,7 +71,7 @@ function initVault(input = {}) {
     
     console.log(JSON.stringify({
       status: 'success',
-      path: VAULT_PATH,
+      path: vaultPath,
       folders: FOLDERS,
       index: null,
       message: 'Vault initialized successfully'

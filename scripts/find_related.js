@@ -1,105 +1,96 @@
 #!/usr/bin/env node
 /**
- * Find notes related to a topic with improved ranking
- * Version: 2.0.0
+ * Find notes related to a topic using file-based matching.
  */
 
 const fs = require('fs');
 const path = require('path');
-const { resolveVaultPath, getPaths, VAULT_PATH, readVaultDir, parseFrontmatter, extractWikiLinks, resolveInput, getDb, hasIndex } = require('./lib/common');
+const { readVaultDir, parseFrontmatter, extractWikiLinks, extractTags, resolveInput } = require('./lib/common');
 
 function findRelated(topic, limit = 5) {
   if (!topic || typeof topic !== 'string') {
     return { error: 'Missing required field: topic' };
   }
-  if (!fs.existsSync(VAULT_PATH)) {
-    return { error: `Vault not found: ${VAULT_PATH}` };
+  if (!fs.existsSync(vaultPath)) {
+    return { error: `Vault not found: ${vaultPath}` };
   }
-  
+
   const files = readVaultDir(vaultPath);
   const topicLower = topic.toLowerCase();
-  const topicTerms = topicLower.split(/\s+/).filter(t => t.length > 0);
+  const topicTerms = topicLower.split(/\s+/).filter(Boolean);
   const topicNotes = [];
   const related = [];
-  
-  // First pass: find topic notes
+
   for (const filePath of files) {
     try {
       const content = fs.readFileSync(filePath, 'utf-8');
       const { frontmatter } = parseFrontmatter(content);
       const title = frontmatter.title || path.basename(filePath, '.md');
-      
       if (topicTerms.some(t => title.toLowerCase().includes(t))) {
         topicNotes.push({
-          path: path.relative(VAULT_PATH, filePath),
+          path: path.relative(filePath),
           title,
           relation: 'topic-match'
         });
       }
-    } catch (e) {}
+    } catch (_) {}
   }
-  
-  const topicNoteTitles = new Set(topicNotes.map(n => n.title.toLowerCase()));
-  
-  // Second pass: find related notes with scoring
+
+  const topicTitles = new Set(topicNotes.map(n => n.title.toLowerCase()));
+
   for (const filePath of files) {
     try {
       const content = fs.readFileSync(filePath, 'utf-8');
       const { frontmatter, body } = parseFrontmatter(content);
       const title = frontmatter.title || path.basename(filePath, '.md');
-      
-      if (topicNoteTitles.has(title.toLowerCase())) continue;
-      
+      if (topicTitles.has(title.toLowerCase())) continue;
+
       const links = extractWikiLinks(content);
-      const contentLower = content.toLowerCase();
-      const noteTags = new Set([...(frontmatter.tags || []), ...extractTags(body)]);
-      
+      const tags = new Set([...(frontmatter.tags || []), ...extractTags(body)]);
+      const lower = content.toLowerCase();
       let score = 0;
-      let relations = [];
-      
-      // Links to topic notes
-      for (const tn of topicNotes) {
-        if (links.some(l => l.toLowerCase() === tn.title.toLowerCase())) {
+      const relations = [];
+
+      for (const topicNote of topicNotes) {
+        if (links.some(l => l.toLowerCase() === topicNote.title.toLowerCase())) {
           score += 40;
           relations.push('links-to');
           break;
         }
       }
-      
-      // Mentions topic
-      if (topicTerms.some(t => contentLower.includes(t))) {
+
+      if (topicTerms.some(t => lower.includes(t))) {
         score += 20;
         relations.push('mentions');
       }
-      
-      // Shared tags with topic notes
-      for (const tn of topicNotes) {
+
+      for (const topicNote of topicNotes) {
         try {
-          const tnContent = fs.readFileSync(path.join(VAULT_PATH, tn.path), 'utf-8');
-          const { frontmatter: tnFm } = parseFrontmatter(tnContent);
-          const tnTags = new Set([...(tnFm.tags || []), ...extractTags(tnContent)]);
-          const shared = [...noteTags].filter(t => tnTags.has(t));
+          const noteContent = fs.readFileSync(path.join(topicNote.path), 'utf-8');
+          const { frontmatter: noteFm, body: noteBody } = parseFrontmatter(noteContent);
+          const noteTags = new Set([...(noteFm.tags || []), ...extractTags(noteBody)]);
+          const shared = [...tags].filter(tag => noteTags.has(tag));
           if (shared.length > 0) {
             score += shared.length * 15;
-            if (!relations.includes('shared-tags')) relations.push('shared-tags');
+            relations.push('shared-tags');
             break;
           }
-        } catch (e) {}
+        } catch (_) {}
       }
-      
+
       if (score > 0) {
         related.push({
-          path: path.relative(VAULT_PATH, filePath),
+          path: path.relative(filePath),
           title,
-          relation: relations.join(', '),
+          relation: [...new Set(relations)].join(', '),
           score
         });
       }
-    } catch (e) {}
+    } catch (_) {}
   }
-  
+
   related.sort((a, b) => b.score - a.score);
-  
+
   return {
     topic,
     topic_notes: topicNotes,
@@ -110,7 +101,7 @@ function findRelated(topic, limit = 5) {
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
-  console.log(JSON.stringify({ error: 'Usage (include vault_path unless SECOND_BRAIN_VAULT is set): find_related.js \'{...}\'', required: ['topic'], optional: ['limit'] }, null, 2));
+  console.log(JSON.stringify({ error: 'Usage: find_related.js \'{...}\'', required: ['topic'], optional: ['limit'] }, null, 2));
   process.exit(1);
 }
 
@@ -119,6 +110,7 @@ try {
   const topic = resolveInput(input, 'topic', 'title', 'note_title', 'query', 'q');
   const result = findRelated(topic, input.limit || 5);
   console.log(JSON.stringify(result, null, 2));
+  if (result.error) process.exit(1);
 } catch (e) {
   console.log(JSON.stringify({ error: e.message }, null, 2));
   process.exit(1);

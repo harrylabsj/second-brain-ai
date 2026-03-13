@@ -6,7 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { resolveVaultPath, getPaths, VAULT_PATH, sanitizeFilename, buildFrontmatter, indexNote, getDb, requireWriteApproval } = require('./lib/common');
+const { resolveVaultPath, getPaths, sanitizeFilename, buildFrontmatter, indexNote, getDb, requireWriteApproval } = require('./lib/common');
 
 const TYPE_FOLDERS = {
   idea: '02-Ideas', project: '03-Projects', person: '04-People',
@@ -15,11 +15,12 @@ const TYPE_FOLDERS = {
 };
 
 function captureNote(data) {
+  const vaultPath = getPaths(data).vault;
   const { vault: vaultPath } = getPaths(data);
   requireWriteApproval(data, 'allow_write');
   if (!data.title) return { error: 'Title is required' };
-  if (!fs.existsSync(VAULT_PATH)) {
-    try { fs.mkdirSync(VAULT_PATH, { recursive: true }); }
+  if (!fs.existsSync(vaultPath)) {
+    try { fs.mkdirSync({ recursive: true }); }
     catch (e) { return { error: `Cannot create vault: ${e.message}` }; }
   }
   
@@ -51,7 +52,7 @@ function captureNote(data) {
     
     return {
       status: 'success',
-      path: path.relative(VAULT_PATH, filePath),
+      path: path.relative(filePath),
       title: data.title,
       type: data.type || 'note'
     };

@@ -6,14 +6,14 @@
 
 const fs = require('fs');
 const path = require('path');
-const { resolveVaultPath, getPaths, VAULT_PATH, readVaultDir, parseFrontmatter, extractWikiLinks, extractTags, resolveInput, getDb, hasIndex } = require('./lib/common');
+const { resolveVaultPath, getPaths, readVaultDir, parseFrontmatter, extractWikiLinks, extractTags, resolveInput, getDb, hasIndex } = require('./lib/common');
 
 function buildContextPack(topic, limit = 10) {
   if (!topic || typeof topic !== 'string') {
     return { error: 'Missing required field: topic' };
   }
-  if (!fs.existsSync(VAULT_PATH)) {
-    return { error: `Vault not found: ${VAULT_PATH}` };
+  if (!fs.existsSync(vaultPath)) {
+    return { error: `Vault not found: ${vaultPath}` };
   }
   
   const files = readVaultDir(vaultPath);
@@ -58,7 +58,7 @@ function buildContextPack(topic, limit = 10) {
       
       if (score > 0) {
         scoredNotes.push({
-          path: path.relative(VAULT_PATH, filePath),
+          path: path.relative(filePath),
           title,
           type: frontmatter.type || 'note',
           score,
