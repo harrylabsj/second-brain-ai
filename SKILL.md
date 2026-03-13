@@ -1,9 +1,14 @@
 ---
 name: second-brain-ai
 description: Read, capture, search, relate, and assemble context from a user-specified local Markdown knowledge base using file-based scanning and smart linking. Use when the user explicitly wants a Second Brain / note-vault memory layer for Markdown notes, including saving ideas, searching past notes, finding related notes or backlinks, building context packs, appending to existing notes, or getting smart link suggestions. Requires an explicit SECOND_BRAIN_VAULT path; do not use for broad filesystem access.
+env:
+  - name: SECOND_BRAIN_VAULT
+    required: true
+    secret: false
+    description: Absolute path to the user-selected local Markdown vault. This skill is limited to that vault path.
 ---
 
-# Second Brain AI Skill v2.1.3
+# Second Brain AI Skill v2.1.4
 
 A lightweight skill for working with a user-chosen Markdown knowledge base (Obsidian/Logseq style) with controlled write operations, file-based search, and smart link suggestions.
 
