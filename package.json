@@ -1,0 +1,43 @@
+{
+  "name": "second-brain-ai",
+  "version": "2.0.0",
+  "description": "Second Brain with SQLite indexing and smart linking",
+  "main": "scripts/search_notes.js",
+  "scripts": {
+    "test": "node test/run-tests.js",
+    "test:init": "node test/run-tests.js init",
+    "test:capture": "node test/run-tests.js capture",
+    "test:append": "node test/run-tests.js append",
+    "test:search": "node test/run-tests.js search",
+    "test:related": "node test/run-tests.js related",
+    "test:backlinks": "node test/run-tests.js backlinks",
+    "test:context": "node test/run-tests.js context",
+    "test:suggest": "node test/run-tests.js suggest",
+    "init": "node scripts/init_vault.js",
+    "search": "node scripts/search_notes.js",
+    "capture": "node scripts/capture_note.js",
+    "append": "node scripts/append_note.js",
+    "related": "node scripts/find_related.js",
+    "backlinks": "node scripts/get_backlinks.js",
+    "context": "node scripts/build_context_pack.js",
+    "suggest": "node scripts/suggest_links.js",
+    "rebuild": "node scripts/rebuild_index.js"
+  },
+  "keywords": [
+    "second-brain",
+    "knowledge-base",
+    "obsidian",
+    "logseq",
+    "markdown",
+    "pkm",
+    "notes",
+    "zettelkasten",
+    "sqlite",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
