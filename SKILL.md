@@ -1,11 +1,11 @@
 ---
 name: second-brain-ai
-description: Read, search, relate, and assemble context from a user-specified local Markdown knowledge base using file-based scanning and smart linking. Use when the user explicitly wants a read-only Second Brain / note-vault memory layer for Markdown notes, including searching past notes, finding related notes or backlinks, building context packs, or getting smart link suggestions. Requires an explicit SECOND_BRAIN_VAULT path; do not use for broad filesystem access or note writing.
+description: Read, capture, search, relate, and assemble context from a user-specified local Markdown knowledge base using file-based scanning and smart linking. Use when the user explicitly wants a Second Brain / note-vault memory layer for Markdown notes, including saving ideas, searching past notes, finding related notes or backlinks, building context packs, appending to existing notes, or getting smart link suggestions. Requires an explicit SECOND_BRAIN_VAULT path; do not use for broad filesystem access.
 ---
 
-# Second Brain AI Skill v2.0.5
+# Second Brain AI Skill v2.1.0
 
-A lightweight read-only skill for inspecting a user-chosen Markdown knowledge base (Obsidian/Logseq style) with file-based search and smart link suggestions.
+A lightweight skill for working with a user-chosen Markdown knowledge base (Obsidian/Logseq style) with controlled write operations, file-based search, and smart link suggestions.
 
 ## Requirements
 
@@ -29,13 +29,15 @@ This skill no longer writes to a default home-directory vault automatically. The
 
 - Only use this skill with a vault path the user explicitly chose.
 - Do not use it for broad filesystem search outside the configured vault.
-- This release is read-only. It does not create, append, delete, or rewrite user notes.
+- Write operations are allowed only when the caller explicitly sets `allow_write: true`.
+- All write operations stay inside the configured vault path.
+- The skill does not perform broad filesystem writes outside the configured vault.
 - This release uses file-based scanning only and avoids native database dependencies.
 
 
-## Read-only scope
+## Controlled write scope
 
-This release is intentionally read-only. It supports search, relation discovery, backlinks, context assembly, and link suggestion only. It does not create notes, append content, initialize vaults, rebuild indexes, or modify user files.
+This release supports both read and write actions, but write actions require explicit confirmation in the input payload. Initialization, note creation, and note appending require `allow_write: true`. All actions are limited to the configured vault path.
 ## Tools
 
 
@@ -199,3 +201,8 @@ Build a context pack for a topic (for agent consumption).
 
 ---
 
+
+
+## Write action safety
+
+For write-capable tools, the input must include `allow_write: true`. Without it, the tool must refuse to modify the vault.

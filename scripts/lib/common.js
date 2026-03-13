@@ -174,6 +174,13 @@ function generateId() {
 /**
  * Sanitize a string for use in filename
  */
+
+function requireWriteApproval(data, flag='allow_write') {
+  if (!data || data[flag] !== true) {
+    throw new Error(`Explicit ${flag}=true is required for write operations in this skill.`);
+  }
+}
+
 function sanitizeFilename(title) {
   return title
     .replace(/[<>:"/\\|?*]/g, '-')
@@ -334,5 +341,5 @@ function findNoteByTitle(title) {
 }
 
 module.exports = {
-  VAULT_PATH, INDEX_DB_PATH, getDb, hasIndex, getVaultPath, getIndexPath, loadIgnorePatterns, shouldIgnore, readVaultDir, parseFrontmatter, extractWikiLinks, extractTags, generateId, sanitizeFilename, buildFrontmatter, resolveInput, findNoteByTitle, indexNote, rebuildIndex
+  VAULT_PATH, INDEX_DB_PATH, getDb, hasIndex, getVaultPath, getIndexPath, loadIgnorePatterns, shouldIgnore, readVaultDir, parseFrontmatter, extractWikiLinks, extractTags, generateId, sanitizeFilename, buildFrontmatter, resolveInput, findNoteByTitle, indexNote, rebuildIndex, requireWriteApproval
 };
