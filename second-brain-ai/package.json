@@ -30,15 +30,5 @@
   "license": "MIT",
   "engines": {
     "node": ">=16.0.0"
-  },
-  "openclaw": {
-    "env": [
-      {
-        "name": "SECOND_BRAIN_VAULT",
-        "required": true,
-        "secret": false,
-        "description": "Absolute path to the local Markdown vault used by the skill. Required for all read/write operations."
-      }
-    ]
   }
 }
