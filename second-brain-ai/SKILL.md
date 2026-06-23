@@ -1,5 +1,6 @@
 ---
 name: second-brain-ai
+version: 2.3.3
 description: Read, capture, search, relate, and assemble context from a user-specified local Markdown knowledge base (Obsidian/Logseq style). Supports controlled write operations with explicit approval and attribution. Use when the user wants a Second Brain / note-vault memory layer for Markdown notes, including saving ideas, searching past notes, finding related notes or backlinks, building context packs, appending to existing notes (with attribution), or getting smart link suggestions.
 ---
 
@@ -25,6 +26,37 @@ export SECOND_BRAIN_VAULT="/absolute/path/to/your/vault"
 - Only operates within the configured vault path
 - Write operations require `allow_write: true`
 - Append operations require `appended_by` attribution
+- Do not assume a private vault path. Use `SECOND_BRAIN_VAULT` or ask the user for the configured vault.
+- Do not turn raw transcripts into permanent notes without summarizing, attributing, and asking for write approval.
+
+## Human-Brain Handshake Workflow
+
+When the user is building long-term knowledge, optimize for a clean handoff between the agent and the user's 人脑.
+
+1. **Recall before write**
+   - Run `search_notes`, `find_related`, or `build_context_pack` before creating durable notes, unless the user explicitly asks for a quick capture.
+   - Summarize what already exists and name the gap the new note fills.
+2. **Evidence and attribution**
+   - Label content as user-provided, agent-synthesized, imported, or inferred.
+   - Keep source snippets short and attach note titles or paths when available.
+   - Mark unresolved questions instead of smoothing them into false certainty.
+3. **Write gate**
+   - Ask for explicit approval before `capture_note`, `append_note`, or `init_vault`.
+   - Require `allow_write: true` and a meaningful `appended_by` value for append operations.
+   - Before appending, check for likely duplicate notes or conflicting claims.
+4. **Context-pack output**
+   - Provide relevant notes, strongest snippets, open questions, suggested links, and a recommended next thinking step.
+   - Do not claim semantic search, vector indexing, or automatic conflict resolution; this repair build is file-scan based.
+
+Preferred response shape:
+
+```text
+Recall: <existing notes or none found>
+Gap: <what is missing or newly clarified>
+Proposed write: <new note or append target>
+Approval needed: <yes/no + why>
+Next thinking step: <one question for the user's 人脑>
+```
 
 ## Tools
 
